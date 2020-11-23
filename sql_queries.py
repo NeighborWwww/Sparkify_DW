@@ -36,8 +36,7 @@ staging_events_table_create = ("""CREATE TABLE IF NOT EXISTS staging_events (
     status          INT,
     ts              BIGINT,
     user_agent      TEXT,
-    user_id         VARCHAR,
-    PRIMARY KEY(event_id)
+    user_id         VARCHAR
 )
 """)
 
@@ -45,14 +44,13 @@ staging_songs_table_create = ("""CREATE TABLE IF NOT EXISTS staging_songs (
     song_id         VARCHAR,
     num_songs       INT,
     artist_id       VARCHAR,
-    artist_latitude DOUBLE PRECISION,
-    artist_longitude DOUBLE PRECISION,
+    artist_latitude FLOAT,
+    artist_longitude FLOAT,
     artist_location VARCHAR,
     artist_name     VARCHAR,
     title           VARCHAR,
-    duration        DOUBLE PRECISION,
-    year            INT,
-    PRIMARY KEY (song_id)
+    duration        FLOAT,
+    year            INT
 )
 """)
 
@@ -130,7 +128,7 @@ staging_songs_copy = ("""COPY staging_songs
 # FINAL TABLES
 
 songplay_table_insert = ("""INSERT INTO songplays (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent) 
-                        SELECT
+                        SELECT DISTINCT 
                         TIMESTAMP 'epoch' + e.ts/1000 * interval '1 second' as start_time,
                         e.user_id,
                         e.user_level,
@@ -140,10 +138,11 @@ songplay_table_insert = ("""INSERT INTO songplays (start_time, user_id, level, s
                         e.user_location,
                         e.user_agent
                         FROM staging_events e 
-                        JOIN staging_songs s
+                        JOIN staging_songs s 
                         ON e.song=s.title 
                         AND e.artist_name=s.artist_name
-                        AND e.length=s.duration;
+                        AND e.length=s.duration 
+                        WHERE e.page='NextSong'
 """)
 
 user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level) 
@@ -154,7 +153,8 @@ user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gende
                         user_gender,
                         user_level 
                         FROM staging_events 
-                        WHERE user_id IS NOT NULL
+                        WHERE user_id IS NOT NULL 
+                        AND page='NextSong'
 """)
 
 song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, duration) 
@@ -188,8 +188,7 @@ time_table_insert = ("""INSERT INTO times (start_time, hour, day, week, month, y
                         extract (month from start_time),
                         extract (year from start_time),
                         extract (dayofweek from start_time) 
-                        FROM songplays
-                        
+                        FROM songplays                
 """)
 
 # QUERY LISTS

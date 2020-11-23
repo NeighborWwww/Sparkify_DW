@@ -4,18 +4,38 @@ from sql_queries import create_table_queries, drop_table_queries
 
 
 def drop_tables(cur, conn):
+    """
+    Execute all DROP TABLE queries to drop all the exist table
+    fact table, and dimension tables.
+    :param cur: The cluster use to take the queries.
+    :param conn: manual commit will be make for each query.
+    :return: void
+    """
     for query in drop_table_queries:
         cur.execute(query)
         conn.commit()
 
 
 def create_tables(cur, conn):
+    """
+    Execute all CREATE TABLE queries to create all staging table,
+    fact table, and dimension tables.
+    :param cur: The cluster use to take the queries.
+    :param conn: manual commit will be make for each query.
+    :return: void
+    """
     for query in create_table_queries:
         cur.execute(query)
         conn.commit()
 
 
 def main():
+    """
+    The main part of the program, the connection to the AWS redshift
+    has been established using the information required in the dwh.cfg file
+    drop tables and create tables.
+    :return:
+    """
     config = configparser.ConfigParser()
     config.read('dwh.cfg')
 
